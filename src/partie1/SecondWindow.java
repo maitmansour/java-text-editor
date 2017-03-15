@@ -1,11 +1,33 @@
 package partie1;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JTextArea;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
+import javax.swing.WindowConstants;
 
 public class SecondWindow extends JFrame
 {
@@ -13,6 +35,7 @@ public class SecondWindow extends JFrame
 
 	private JCheckBoxMenuItem styleGras;
 	private JCheckBoxMenuItem styleItalique;
+	private JButton reset ;
 
 	private JCheckBox tbBold;
 	private JCheckBox tbItalic;
@@ -34,9 +57,9 @@ public class SecondWindow extends JFrame
 		
 		//Les radio-bouttons
 		ButtonGroup couleurGroup = new ButtonGroup();
-		JRadioButton blue = new JRadioButton(new ColorMenuItem("blue",Color.blue));
-		JRadioButton rouge = new JRadioButton(new ColorMenuItem("Rouge",Color.red));
-		JRadioButton noir = new JRadioButton(new ColorMenuItem("Noir",Color.black));
+		JRadioButtonMenuItem blue = new JRadioButtonMenuItem(new ColorMenuItem("blue",Color.blue));
+		JRadioButtonMenuItem rouge = new JRadioButtonMenuItem(new ColorMenuItem("Rouge",Color.red));
+		JRadioButtonMenuItem noir = new JRadioButtonMenuItem(new ColorMenuItem("Noir",Color.black));
 		couleurGroup.add(blue);
 		couleurGroup.add(rouge);
 		couleurGroup.add(noir);
@@ -45,8 +68,15 @@ public class SecondWindow extends JFrame
 		couleur.add(rouge);
 		couleur.add(noir);
 
+		rouge.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,InputEvent.CTRL_MASK));
+		blue.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B,InputEvent.CTRL_MASK));
+		noir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N,InputEvent.CTRL_MASK));
+
+
+		
 
 		textArea = new JTextArea("");
+		textArea.requestFocus();
 		add(textArea);
 		
 
@@ -59,6 +89,13 @@ public class SecondWindow extends JFrame
 		styleItalique = new JCheckBoxMenuItem(new ChangeFontStyle("Italique", Font.ITALIC));
 		style.add(styleGras);
 		style.add(styleItalique);
+
+		styleGras.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G,InputEvent.CTRL_MASK));
+		styleItalique.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I,InputEvent.CTRL_MASK));
+		
+		
+		//setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,InputEvent.CTRL_MASK+InputEvent.SHIFT_MASK));
+		
 		
 		// Toolbar
 		initToolBar();
@@ -93,7 +130,10 @@ public class SecondWindow extends JFrame
 						isSelected, cellHasFocus);
 			}
 		});
-		fontBox.addActionListener(e -> textArea.setFont((Font)fontBox.getSelectedItem()));
+		fontBox.addActionListener(e -> {
+			Font f = (Font)fontBox.getSelectedItem();
+			textArea.setFont(f.deriveFont((float)(int)fontSizeBox.getSelectedItem()));
+		});
 		toolBar.add(fontBox);
 
 		fontSizeBox = new JComboBox<>();
@@ -105,8 +145,24 @@ public class SecondWindow extends JFrame
 		});
 		toolBar.add(fontSizeBox);
 
-		JButton reset = new JButton("reset");
-		reset.addActionListener(e -> {
+		this.reset = new JButton("reset");
+		reset.addActionListener(new ResetAction());
+		toolBar.add(reset);
+		InputMap im = reset.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_R,InputEvent.CTRL_MASK+InputEvent.SHIFT_MASK), "sar");
+        reset.getActionMap().put("sar", new ResetAction());
+		
+		//reset.setMnemonic(KeyEvent.VK_F5);
+		add(toolBar, BorderLayout.NORTH);
+	}
+
+	
+	
+	class ResetAction extends AbstractAction {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+
 			// On change la font
 			textArea.setFont(new Font("Dialog.plain", Font.PLAIN, 12));
 
@@ -117,13 +173,10 @@ public class SecondWindow extends JFrame
 			tbItalic.setSelected(false);
 			fontBox.setSelectedItem(new Font("Dialog.plain", Font.PLAIN, 1));
 			fontSizeBox.setSelectedItem(12);
-			System.out.println(fontBox.getSelectedItem());
-		});
-		toolBar.add(reset);
-
-		add(toolBar, BorderLayout.NORTH);
+			
+		}
+		
 	}
-	
 	class ChangeFontStyle extends AbstractAction
 	{
 		private int style;

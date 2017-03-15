@@ -1,20 +1,23 @@
 package partie1;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.*;
 
 import javax.swing.*;
 
 public class SecondWindow extends JFrame
 {
-
-	//Text Area
 	private JTextArea textArea;
-	private JCheckBox gras;
-	private JCheckBox italique;
+
+	private JCheckBoxMenuItem styleGras;
+	private JCheckBoxMenuItem styleItalique;
+
+	private JCheckBox tbBold;
+	private JCheckBox tbItalic;
+	private JComboBox<Font> fontBox;
+	private JComboBox<Integer> fontSizeBox;
 	
 	public SecondWindow()
 	{
@@ -41,54 +44,119 @@ public class SecondWindow extends JFrame
 		couleur.add(blue);
 		couleur.add(rouge);
 		couleur.add(noir);
-		
-		
+
+
 		textArea = new JTextArea("");
 		add(textArea);
 		
-		
+
 		JMenu style = new JMenu("Style");
 		menuBar.add(style);
 		setJMenuBar(menuBar);
 		menuBar.setVisible(true);
 
-		 gras = new JCheckBox(new ChangeFontStyle("Gras"));
-		 italique = new JCheckBox(new ChangeFontStyle("Italique"));
-		style.add(gras);
-		style.add(italique);
+		styleGras = new JCheckBoxMenuItem(new ChangeFontStyle("Gras", Font.BOLD));
+		styleItalique = new JCheckBoxMenuItem(new ChangeFontStyle("Italique", Font.ITALIC));
+		style.add(styleGras);
+		style.add(styleItalique);
 		
-		
-		
-		setPreferredSize(new Dimension(300, 200));
+		// Toolbar
+		initToolBar();
 
 		pack();
+		setLocationRelativeTo(null);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setVisible(true);
 	}
+
+	private void initToolBar()
+	{
+		JToolBar toolBar = new JToolBar();
+
+		tbBold = new JCheckBox( new ChangeFontStyle("gras", Font.ITALIC) );
+		tbItalic = new JCheckBox( new ChangeFontStyle("italique", Font.ITALIC) );
+		toolBar.add(tbBold);
+		toolBar.add(tbItalic);
+
+		fontBox = new JComboBox<>(
+				GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts()
+		);
+		fontBox.setRenderer(new DefaultListCellRenderer() {
+			@Override
+			public Component getListCellRendererComponent(JList<?> list,
+														  Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				if (value != null) {
+					Font font = (Font) value;
+					value = font.getName();
+				}
+				return super.getListCellRendererComponent(list, value, index,
+						isSelected, cellHasFocus);
+			}
+		});
+		fontBox.addActionListener(e -> textArea.setFont((Font)fontBox.getSelectedItem()));
+		toolBar.add(fontBox);
+
+		fontSizeBox = new JComboBox<>();
+		for (int i = 8 ; i <= 24 ; i++) {
+			fontSizeBox.addItem(i);
+		}
+		fontSizeBox.addActionListener(e -> {
+			textArea.setFont(textArea.getFont().deriveFont((float)(int)fontSizeBox.getSelectedItem())); // Besoin de la méthode avec le paramètre float
+		});
+		toolBar.add(fontSizeBox);
+
+		JButton reset = new JButton("reset");
+		reset.addActionListener(e -> {
+			// On change la font
+			textArea.setFont(new Font("Dialog.plain", Font.PLAIN, 12));
+
+			// On réinitialise tout
+			styleGras.setSelected(false);
+			styleItalique.setSelected(false);
+			tbBold.setSelected(false);
+			tbItalic.setSelected(false);
+			fontBox.setSelectedItem(new Font("Dialog.plain", Font.PLAIN, 1));
+			fontSizeBox.setSelectedItem(12);
+			System.out.println(fontBox.getSelectedItem());
+		});
+		toolBar.add(reset);
+
+		add(toolBar, BorderLayout.NORTH);
+	}
 	
-	class ChangeFontStyle extends AbstractAction{
-		
-		public ChangeFontStyle(String name) {
+	class ChangeFontStyle extends AbstractAction
+	{
+		private int style;
+
+		ChangeFontStyle(String name, int style)
+		{
 			putValue(Action.NAME, name);
+			this.style = style;
 		}
 		
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent e)
+		{
+			int boldState= Font.PLAIN;
+			int italicState = Font.PLAIN;
 
-			 int boldState= Font.PLAIN;
-			 int italicState = Font.PLAIN;
+			if (styleGras.isSelected() || tbBold.isSelected())
+			{
+				boldState = Font.BOLD;
+				// styleGras.setSelected(true);
+				// tbBold.setSelected(true);
+			}
 
-				if (gras.isSelected()) {
-					boldState = Font.BOLD;
-				}
+			if (styleItalique.isSelected() || tbItalic.isSelected())
+			{
+				italicState = Font.ITALIC;
+				// styleItalique.setSelected(true);
+				// tbItalic.setSelected(true);
+			}
 
-				if (italique.isSelected()) {
-					italicState = Font.ITALIC;
-				}
-				
-				textArea.setFont(textArea.getFont().deriveFont(boldState+italicState));
-			
-			
+			textArea.setFont(textArea.getFont().deriveFont(boldState+italicState));
+
+
 		}
 		
 	}
